@@ -1,0 +1,14 @@
+<script src="lib.js"></script>
+
+<script>
+    let l = new Lib({
+        language: 'pt-br',
+        global: true,
+        translation: {
+            'pt-br': 'pt-br.json'
+        },
+        model: 'model.json'
+    });
+
+    console.log(l.l10n`Testing strings`)
+</script>
