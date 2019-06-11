@@ -44,15 +44,15 @@ class Localize {
 
     checkInconsistencies(obj, key) {
         let nfound = [];
-        for(let m in this.options.model) {
+        for (let m in this.options.model) {
             let found = false;
-            for(let o in obj[key]) {
-                if(m === o) {
+            for (let o in obj[key]) {
+                if (m === o) {
                     found = true;
                 }
             }
 
-            if(!found) {
+            if (!found) {
                 nfound.push(m);
                 console.warn(`[${key.toUpperCase()}] Key "${m}" not found`)
             }
@@ -61,11 +61,24 @@ class Localize {
 
     localize(str) {
         try {
-            return this.options.translation[this.options.language][str];
+            let local_str = ('' + str).split('.');
+            let actual = this.options.translation[this.options.language];
+            for (let t = 0; t < local_str.length; t++) {
+                actual = actual[local_str[t]]
+            }
+            return actual;
         }
         catch (err) {
             return str[0];
         }
+    }
+
+    getAvailableLanguages() {
+        let langs = [];
+        for (let l in this.options.translation) {
+            langs.push(l);
+        }
+        return langs;
     }
 
     getLanguage() {
