@@ -23,8 +23,14 @@ class Localyze {
     checkTranslations() {
         for (let t in this.options.translation) {
             let translation = typeof this.options.translation[t];
-            if (typeof translation === 'string') {
+            if (translation === 'string') {
                 this._getTranslation(this.options.translation, t);
+            }
+            else {
+                console.log(`[l10n] ${t} file loaded`);
+                if (this.options.model) {
+                    this.checkInconsistencies(this.options.translation, t);
+                }
             }
         }
     }
