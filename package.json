@@ -1,6 +1,6 @@
 {
-  "name": "localize",
-  "lib_name": "Localize",
+  "name": "localyze",
+  "lib_name": "localyze",
   "version": "1.0.0",
   "description": "",
   "main": "lib-node.js",
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/roquef/lib_base.git"
+    "url": "git+https://github.com/myTapp/localyze.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/roquef/lib_base/issues"
+    "url": "https://github.com/myTapp/localyze/issues"
   },
-  "homepage": "https://github.com/roquef/lib_base#readme",
+  "homepage": "https://github.com/myTapp/localyze#readme",
   "dependencies": {},
   "devDependencies": {
     "babel-core": "^6.26.3",
