@@ -5,7 +5,7 @@ module.exports = {
   entry: './src/entry.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: info.main,
+    filename: info.lib_name + '.min.js',
     library: info.lib_name,
     libraryTarget: 'var'
   },
