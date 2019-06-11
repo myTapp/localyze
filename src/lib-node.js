@@ -1,4 +1,4 @@
-class Localize {
+class Localyze {
     constructor(options) {
         let default_options = {
             language: 'en',
@@ -9,8 +9,8 @@ class Localize {
         this.options = Object.assign(default_options, options);
 
         if (this.options.global === true) {
-            global.localize = this.localize;
-            global.localize = global.localize.bind(this);
+            global.localyze = this.localyze;
+            global.localyze = global.localyze.bind(this);
         }
 
         if (this.options.model && typeof this.options.model === 'string') {
@@ -110,4 +110,4 @@ class Localize {
     }
 }
 
-module.exports = Localize;
+module.exports = Localyze;

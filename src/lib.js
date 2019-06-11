@@ -1,4 +1,4 @@
-class Localize {
+class Localyze {
     constructor(options) {
         let default_options = {
             language: 'en',
@@ -9,8 +9,8 @@ class Localize {
         this.options = Object.assign(default_options, options);
 
         if (this.options.global === true) {
-            window.localize = this.localize;
-            window.localize = window.localize.bind(this);
+            window.localyze = this.localyze;
+            window.localyze = window.localyze.bind(this);
         }
 
         if (this.options.model && typeof this.options.model === 'string') {
@@ -59,7 +59,7 @@ class Localize {
         }
     }
 
-    localize(str) {
+    localyze(str) {
         try {
             let local_str = ('' + str).split('.');
             let actual = this.options.translation[this.options.language];
@@ -110,4 +110,4 @@ class Localize {
     }
 }
 
-export default Localize;
+export default Localyze;

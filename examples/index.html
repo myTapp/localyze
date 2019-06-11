@@ -1,7 +1,7 @@
 <script src="lib.js"></script>
 
 <script>
-    let l = new Localize({
+    let l = new Localyze({
         language: 'pt-br',
         global: true,
         translation: {
@@ -10,7 +10,6 @@
         model: 'model.json'
     });
 
-    console.log(l.localize`Testing strings`)
-
-    console.log(l.localize`admin.reboot`)
+    console.log(l.localyze`Testing strings`)
+    console.log(l.localyze`admin.reboot`)
 </script>
