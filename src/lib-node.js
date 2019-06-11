@@ -17,6 +17,8 @@ class Localyze {
             this._getTranslation(this.options, 'model');
         }
 
+        this.request = require('request');
+
         this.checkTranslations();
     }
 
@@ -59,7 +61,7 @@ class Localyze {
         }
     }
 
-    localize(str) {
+    localyze(str) {
         try {
             let local_str = ('' + str).split('.');
             let actual = this.options.translation[this.options.language];
@@ -101,12 +103,9 @@ class Localyze {
     }
 
     _get(url, cb) {
-        var newXHR = new XMLHttpRequest();
-        newXHR.addEventListener('load', function () {
-            cb(this.response);
-        });
-        newXHR.open('GET', url);
-        newXHR.send();
+        this.request(url, (err, res, body) => {
+            cb(body);
+        })
     }
 }
 

@@ -1,9 +1,9 @@
 {
   "name": "localyze",
   "lib_name": "localyze",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "",
-  "main": "lib-node.js",
+  "main": "src/lib-node.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "webpack --watch",
@@ -20,7 +20,9 @@
     "url": "https://github.com/myTapp/localyze/issues"
   },
   "homepage": "https://github.com/myTapp/localyze#readme",
-  "dependencies": {},
+  "dependencies": {
+    "request": "^2.88.0"
+  },
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-loader": "^8.0.6",
