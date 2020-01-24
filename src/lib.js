@@ -4,6 +4,7 @@ class Localyze {
 
         this.options.global === true && this.bindGlobals();
         this.options.model && typeof this.options.model === 'string' && this._getTranslation(this.options, 'model');
+        this.localyze = this.localyze.bind(this);
         this.checkTranslations();
         return this;
     }
