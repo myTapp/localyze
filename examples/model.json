@@ -1,4 +1,8 @@
 {
     "Testing strings": "",
-    "Testing more!": ""
+    "Testing more!": "",
+    "Testing console!": "",
+    "Testing": {
+        "console": ""
+    }
 }
