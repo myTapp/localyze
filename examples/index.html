@@ -1,15 +1,19 @@
-<script src="lib.js"></script>
+<script type="module">
+    import Localyze from '/src/lib.js';
 
-<script>
     let l = new Localyze({
         language: 'pt-br',
         global: true,
         translation: {
-            'pt-br': 'pt-br.json'
+            'pt-br': ['pt-br.json', 'pt-br/home.json']
         },
-        model: 'model.json'
+        model: 'model.json',
+        ready: () => {
+            console.log(l);
+            console.log(l.localyze`Testing strings`)
+            console.log(l.localyze`admin.reboot`)
+            console.log(l.localyze`Testing more!`)
+        }
     });
 
-    console.log(l.localyze`Testing strings`)
-    console.log(l.localyze`admin.reboot`)
 </script>

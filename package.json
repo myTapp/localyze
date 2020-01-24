@@ -1,14 +1,14 @@
 {
   "name": "localyze",
   "lib_name": "localyze",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "",
-  "main": "src/lib-node.js",
+  "main": "src/lib.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "webpack --watch",
     "build": "webpack -p",
-    "start": "webpack-dev-server --open"
+    "dev": "webpack-dev-server --open"
   },
   "repository": {
     "type": "git",
@@ -26,6 +26,7 @@
   "devDependencies": {
     "babel-core": "^6.26.3",
     "babel-loader": "^8.0.6",
+    "terser-webpack-plugin": "^2.3.2",
     "webpack": "^4.33.0",
     "webpack-cli": "^3.3.2",
     "webpack-dev-server": "^3.6.0"

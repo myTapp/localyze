@@ -1,51 +1,121 @@
 class Localyze {
     constructor(options) {
-        let default_options = {
+        this.options = Object.assign(this.default_options, options);
+
+        this.options.global === true && this.bindGlobals();
+        this.options.model && typeof this.options.model === 'string' && this._getTranslation(this.options, 'model');
+        this.checkTranslations();
+        return this;
+    }
+
+    get default_options() {
+        return {
             language: 'en',
             translation: {},
             global: false,
-            model: null
-        };
-        this.options = Object.assign(default_options, options);
-
-        if (this.options.global === true) {
-            window.localyze = this.localyze;
-            window.localyze = window.localyze.bind(this);
+            model: null,
+            check_model: true
         }
+    }
 
-        if (this.options.model && typeof this.options.model === 'string') {
-            this._getTranslation(this.options, 'model');
-        }
-
-        this.checkTranslations();
+    bindGlobals() {
+        try {
+            if (window) {
+                window.localyze = this.localyze;
+                window.localyze = window.localyze.bind(this);
+            }
+            if (global) {
+                global.localyze = this.localyze;
+                global.localyze = global.localyze.bind(this);
+            }
+        } catch (err) { }
     }
 
     checkTranslations() {
         for (let t in this.options.translation) {
-            let translation = typeof this.options.translation[t];
-            if (translation === 'string') {
+            let translation = this.options.translation[t];
+            if (typeof translation === 'string') {
                 this._getTranslation(this.options.translation, t);
             }
             else {
-                console.log(`[l10n] ${t} file loaded`);
-                if (this.options.model) {
-                    this.checkInconsistencies(this.options.translation, t);
+                if (!translation.length) {
+                    console.log(`[l10n] ${t} file loaded`);
+                    if (this.options.model && this.options.check_model) {
+                        this.checkInconsistencies(this.options.translation, t);
+                    }
+                }
+                else {
+                    this.getGroupedTranslation(translation, t);
                 }
             }
         }
     }
 
+    getGroupedTranslation(group, key) {
+        if (!this.options.translation[key]) this.options.translation[key] = {};
+        let count = 0;
+
+        for (let g of group) {
+            console.log(g);
+            this._getFile(g, (res, err) => {
+                if (res) {
+                    this.options.translation[key] = Object.assign(this.options.translation[key], res);
+                    count++;
+                    if (count === group.length) {
+                        if (this.options.model && key !== 'model') {
+                            this.checkInconsistencies(this.options.translation, key);
+                        }
+                        this.checkIfReady(this.options.translation);
+                    }
+                }
+            })
+        }
+    }
+
     _getTranslation(obj, key) {
-        this._get(obj[key], (res) => {
-            try {
-                res = JSON.parse(res);
+        this._getFile(obj[key], (res, err) => {
+            if (res) {
                 obj[key] = res;
                 console.log(`[l10n] ${key} file loaded`);
-                if (this.options.model) {
+                if (this.options.model && key !== 'model') {
                     this.checkInconsistencies(obj, key);
                 }
-            } catch (err) { console.warn(err); }
+                this.checkIfReady(obj);
+            }
+            else {
+                console.log(`[l10n] Error loading ${key}`);
+            }
+        });
+    }
+
+    _getFile(path, cb) {
+        this._get(path, (res) => {
+            try {
+                res = JSON.parse(res);
+                cb(res, null);
+            } catch (err) {
+                console.warn(err, path, res);
+                try {
+                    cb(null, err);
+                } catch (err) { }
+            }
         })
+    }
+
+    checkIfReady(translations) {
+        for (let t in translations) {
+            if (!translations[t] || typeof translations[t] === 'string') return false;
+        }
+
+        this.callReady();
+    }
+
+    callReady() {
+        if (this.options.ready) {
+            try {
+                this.options.ready(this);
+            } catch (err) { }
+        }
     }
 
     checkInconsistencies(obj, key) {
@@ -53,16 +123,16 @@ class Localyze {
         for (let m in this.options.model) {
             let found = false;
             for (let o in obj[key]) {
-                if (m === o) {
+                if (m == o) {
                     found = true;
                 }
             }
 
             if (!found) {
                 nfound.push(m);
-                console.warn(`[${key.toUpperCase()}] Key "${m}" not found`)
             }
         }
+        console.warn(`[MODEL-CHECK] Key(s) "${nfound.join('", "')}" missing in ${key.toUpperCase()}`)
     }
 
     localyze(str) {
@@ -79,19 +149,15 @@ class Localyze {
         }
     }
 
-    getAvailableLanguages() {
-        let langs = [];
-        for (let l in this.options.translation) {
-            langs.push(l);
-        }
-        return langs;
+    get availableLanguages() {
+        return Object.keys(this.options.translation);
     }
 
-    getLanguage() {
+    get language() {
         return this.options.language;
     }
 
-    setLanguage(lang) {
+    set language(lang) {
         this.options.language = lang;
     }
 
