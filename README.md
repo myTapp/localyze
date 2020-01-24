@@ -10,7 +10,7 @@ new Localyze({
     translation: {
         'pt-br': ['pt-br/index.json', 'pt-br/home.json']
     },
-    ready: ({localyze}) => {
+    ready: ({ localyze }) => {
         console.log(localyze`input.invalid`);
     }
 });
