@@ -178,7 +178,12 @@ class Localyze {
             let local_str = Array.isArray(str) ? str : ('' + str).split('.');
             let translation = [];
             for (let t = 0; t < local_str.length; t++) {
-                translation.push(actual[local_str[t]]);
+                let word = local_str[t].split('.');
+                let translated = actual;
+                for (let i = 0; i < word.length; i++) {
+                    translated = translated[word[i]];
+                }
+                translation.push(translated);
             }
             actual = translation.join(' ');
             if (transform) return this._checkTransform(actual, transform);
