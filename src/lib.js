@@ -170,7 +170,7 @@ class Localyze {
             }
         }
 
-        if(nfound.length) console.warn(`[MODEL-CHECK] Key(s) "${nfound.join('", "')}" missing in ${key.toUpperCase()}`)
+        if (nfound.length) console.warn(`[MODEL-CHECK] Key(s) "${nfound.join('", "')}" missing in ${key.toUpperCase()}`)
     }
 
     localyze(str, transform) {
@@ -215,6 +215,10 @@ class Localyze {
     }
 
     set language(lang) {
+        this.options.language = lang;
+    }
+
+    setLanguage(lang) {
         this.options.language = lang;
     }
 
