@@ -16,7 +16,7 @@ new Localyze({
         console.log(localyze('input.valid', 'lower')); // toLowerCase
         console.log(localyze('input.warning', 'upper')); // toUpperCase
         console.log(localyze('input.error', 'capitalize')); // Capitalize
-        console.log(localyze('input.error', 'capitalize-all')); // Capitalize Every Word
+        console.log(localyze('input.error', 'title')); // Capitalize Every Word
     }
 });
 ```
