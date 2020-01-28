@@ -176,7 +176,7 @@ class Localyze {
     localyze(str, transform) {
         try {
             let actual = this.options.translation[this.options.language];
-            let local_str = Array.isArray(str) ? str : ('' + str).split('.');
+            let local_str = Array.isArray(str) ? str : [('' + str)];
             let translation = [];
             for (let t = 0; t < local_str.length; t++) {
                 let word = local_str[t].split('.');
