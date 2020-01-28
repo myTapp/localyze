@@ -9,7 +9,9 @@
         },
         model: 'model.json',
         ready: ({ localyze }) => {
+            console.log(localyze`Testing strings`);
             console.log(localyze`admin.reboot`);
+            console.log(localyze(['admin.reboot', 'Testing more!']));
         }
     });
 
