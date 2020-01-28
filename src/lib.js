@@ -1,6 +1,7 @@
 class Localyze {
     constructor(options) {
         this.options = Object.assign(this.default_options, options);
+        this.loaded = {};
 
         this.options.global === true && this.bindGlobals();
         this.options.model && typeof this.options.model === 'string' && this._getTranslation(this.options, 'model');
@@ -57,19 +58,54 @@ class Localyze {
         let count = 0;
 
         for (let g of group) {
-            console.log(g);
-            this._getFile(g, (res, err) => {
-                if (res) {
-                    this.options.translation[key] = Object.assign(this.options.translation[key], res);
-                    count++;
-                    if (count === group.length) {
+            if (!this.loaded[g]) {
+                this._getFile(g, (res, err) => {
+                    if (res) {
+                        this.options.translation[key] = Object.assign(this.options.translation[key], res);
+                        this.loaded[g] = true;
+                        count++;
+                        if (count === group.length) {
+                            if (this.options.model && key !== 'model') {
+                                this.checkInconsistencies(this.options.translation, key);
+                            }
+                            this.checkIfReady(this.options.translation);
+                        }
+                    }
+                })
+            }
+        }
+    }
+
+    addTranslationFile(key, data, cb) {
+        if (typeof data === 'string') {
+            if (!this.loaded[data]) {
+                this._getFile(data, (res, err) => {
+                    if (res) {
+                        this.options.translation[key] = Object.assign(this.options.translation[key], res);
+                        this.loaded[data] = true;
                         if (this.options.model && key !== 'model') {
                             this.checkInconsistencies(this.options.translation, key);
                         }
-                        this.checkIfReady(this.options.translation);
+
+                        if (cb) {
+                            try { cb(true) }
+                            catch (err) {
+                                console.warn(err);
+                                if (cb) cb(false, err);
+                            }
+                        }
                     }
-                }
-            })
+                })
+            }
+        }
+        else {
+            try {
+                this.options.translation[key] = Object.assign(this.options.translation[key], data);
+                if (cb) cb(true);
+            } catch (err) {
+                console.warn(err);
+                if (cb) cb(false, err);
+            }
         }
     }
 
@@ -136,18 +172,31 @@ class Localyze {
         console.warn(`[MODEL-CHECK] Key(s) "${nfound.join('", "')}" missing in ${key.toUpperCase()}`)
     }
 
-    localyze(str) {
+    localyze(str, transform) {
         try {
             let local_str = ('' + str).split('.');
             let actual = this.options.translation[this.options.language];
             for (let t = 0; t < local_str.length; t++) {
                 actual = actual[local_str[t]]
             }
+
+            if (transform) return this._checkTransform(str, transform);
             return actual;
         }
         catch (err) {
             return str[0];
         }
+    }
+
+    _checkTransform(str, t) {
+        if (t === 'lower') return str.toLowerCase();
+        if (t === 'upper') return str.toUpperCase();
+        if (t === 'camel') return this._camelize(str);
+    }
+
+    _camelize(str) {
+        str = str.replace(/[-_\s.]+(.)?/g, (_, c) => c ? c.toUpperCase() : '');
+        return str.substr(0, 1).toLowerCase() + str.substr(1);
     }
 
     get availableLanguages() {

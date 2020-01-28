@@ -8,11 +8,8 @@
             'pt-br': ['pt-br.json', 'pt-br/home.json']
         },
         model: 'model.json',
-        ready: () => {
-            console.log(l);
-            console.log(l.localyze`Testing strings`)
-            console.log(l.localyze`admin.reboot`)
-            console.log(l.localyze`Testing more!`)
+        ready: ({ localyze }) => {
+            console.log(localyze`admin.reboot`);
         }
     });
 
