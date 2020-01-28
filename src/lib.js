@@ -180,7 +180,7 @@ class Localyze {
                 actual = actual[local_str[t]]
             }
 
-            if (transform) return this._checkTransform(str, transform);
+            if (transform) return this._checkTransform(actual, transform);
             return actual;
         }
         catch (err) {
