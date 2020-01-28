@@ -174,12 +174,13 @@ class Localyze {
 
     localyze(str, transform) {
         try {
-            let local_str = ('' + str).split('.');
             let actual = this.options.translation[this.options.language];
+            let local_str = Array.isArray(str) ? str : ('' + str).split('.');
+            let translation = [];
             for (let t = 0; t < local_str.length; t++) {
-                actual = actual[local_str[t]]
+                translation.push(actual[local_str[t]]);
             }
-
+            actual = translation.join(' ');
             if (transform) return this._checkTransform(actual, transform);
             return actual;
         }
@@ -191,12 +192,17 @@ class Localyze {
     _checkTransform(str, t) {
         if (t === 'lower') return str.toLowerCase();
         if (t === 'upper') return str.toUpperCase();
-        if (t === 'camel') return this._camelize(str);
+        if (t === 'capitalize') return this._capitalizeFirstLetter(str);
+        if (t === 'capitalize-all') return this._capitalizeAllLetters(str);
     }
 
-    _camelize(str) {
-        str = str.replace(/[-_\s.]+(.)?/g, (_, c) => c ? c.toUpperCase() : '');
-        return str.substr(0, 1).toLowerCase() + str.substr(1);
+    _capitalizeFirstLetter(str) {
+        str = str.toLowerCase();
+        return str.replace(/(^|\s)\S/, v => v.toUpperCase());
+    }
+
+    _capitalizeAllLetters(str) {
+        return str.replace(/(^|\s)\S/g, v => v.toUpperCase());
     }
 
     get availableLanguages() {

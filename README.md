@@ -15,7 +15,8 @@ new Localyze({
         console.log(localyze`input.invalid`);
         console.log(localyze('input.valid', 'lower')); // toLowerCase
         console.log(localyze('input.warning', 'upper')); // toUpperCase
-        console.log(localyze('input.error', 'camel')); // toCamelCase
+        console.log(localyze('input.error', 'capitalize')); // Capitalize
+        console.log(localyze('input.error', 'capitalize-all')); // Capitalize Every Word
     }
 });
 ```
