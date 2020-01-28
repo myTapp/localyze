@@ -1,6 +1,7 @@
 class Localyze {
     constructor(options) {
         this.options = Object.assign(this.default_options, options);
+        this.loaded = {};
 
         this.options.global === true && this.bindGlobals();
         this.options.model && typeof this.options.model === 'string' && this._getTranslation(this.options, 'model');
@@ -57,19 +58,54 @@ class Localyze {
         let count = 0;
 
         for (let g of group) {
-            console.log(g);
-            this._getFile(g, (res, err) => {
-                if (res) {
-                    this.options.translation[key] = Object.assign(this.options.translation[key], res);
-                    count++;
-                    if (count === group.length) {
+            if (!this.loaded[g]) {
+                this._getFile(g, (res, err) => {
+                    if (res) {
+                        this.options.translation[key] = Object.assign(this.options.translation[key], res);
+                        this.loaded[g] = true;
+                        count++;
+                        if (count === group.length) {
+                            if (this.options.model && key !== 'model') {
+                                this.checkInconsistencies(this.options.translation, key);
+                            }
+                            this.checkIfReady(this.options.translation);
+                        }
+                    }
+                })
+            }
+        }
+    }
+
+    addTranslationFile(key, data, cb) {
+        if (typeof data === 'string') {
+            if (!this.loaded[data]) {
+                this._getFile(data, (res, err) => {
+                    if (res) {
+                        this.options.translation[key] = Object.assign(this.options.translation[key], res);
+                        this.loaded[data] = true;
                         if (this.options.model && key !== 'model') {
                             this.checkInconsistencies(this.options.translation, key);
                         }
-                        this.checkIfReady(this.options.translation);
+
+                        if (cb) {
+                            try { cb(true) }
+                            catch (err) {
+                                console.warn(err);
+                                if (cb) cb(false, err);
+                            }
+                        }
                     }
-                }
-            })
+                })
+            }
+        }
+        else {
+            try {
+                this.options.translation[key] = Object.assign(this.options.translation[key], data);
+                if (cb) cb(true);
+            } catch (err) {
+                console.warn(err);
+                if (cb) cb(false, err);
+            }
         }
     }
 
@@ -133,21 +169,46 @@ class Localyze {
                 nfound.push(m);
             }
         }
-        console.warn(`[MODEL-CHECK] Key(s) "${nfound.join('", "')}" missing in ${key.toUpperCase()}`)
+
+        if (nfound.length) console.warn(`[MODEL-CHECK] Key(s) "${nfound.join('", "')}" missing in ${key.toUpperCase()}`)
     }
 
-    localyze(str) {
+    localyze(str, transform) {
         try {
-            let local_str = ('' + str).split('.');
             let actual = this.options.translation[this.options.language];
+            let local_str = Array.isArray(str) ? str : [('' + str)];
+            let translation = [];
             for (let t = 0; t < local_str.length; t++) {
-                actual = actual[local_str[t]]
+                let word = local_str[t].split('.');
+                let translated = actual;
+                for (let i = 0; i < word.length; i++) {
+                    translated = translated[word[i]];
+                }
+                translation.push(translated);
             }
+            actual = translation.join(' ');
+            if (transform) return this._checkTransform(actual, transform);
             return actual;
         }
         catch (err) {
             return str[0];
         }
+    }
+
+    _checkTransform(str, t) {
+        if (t === 'lower') return str.toLowerCase();
+        if (t === 'upper') return str.toUpperCase();
+        if (t === 'capitalize') return this._capitalizeFirstLetter(str);
+        if (t === 'capitalize-all') return this._capitalizeAllLetters(str);
+    }
+
+    _capitalizeFirstLetter(str) {
+        str = str.toLowerCase();
+        return str.replace(/(^|\s)\S/, v => v.toUpperCase());
+    }
+
+    _capitalizeAllLetters(str) {
+        return str.replace(/(^|\s)\S/g, v => v.toUpperCase());
     }
 
     get availableLanguages() {
@@ -159,6 +220,10 @@ class Localyze {
     }
 
     set language(lang) {
+        this.options.language = lang;
+    }
+
+    setLanguage(lang) {
         this.options.language = lang;
     }
 
