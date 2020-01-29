@@ -21,7 +21,7 @@ class Localyze {
     }
 
     checkFetch() {
-        if (!window && global && require) {
+        if (typeof window === 'undefined' && global && require) {
             try {
                 this.fetch = require('node-fetch');
             } catch (err) { }
@@ -247,4 +247,4 @@ class Localyze {
     }
 }
 
-export default Localyze;
+module.exports = Localyze;

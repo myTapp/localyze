@@ -1,7 +1,7 @@
 {
   "name": "localyze",
   "lib_name": "localyze",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "",
   "main": "src/lib-node.js",
   "browser": "./src/lib.js",
