@@ -1,53 +1,157 @@
 class Localyze {
     constructor(options) {
-        let default_options = {
+        this.checkFetch();
+        this.options = Object.assign(this.default_options, options);
+        this.options.model && typeof this.options.model === 'string' && this._getTranslation(this.options, 'model');
+        this.localyze = this.localyze.bind(this);
+        this.loaded = {};
+        this.checkTranslations();
+
+        return this;
+    }
+
+    get default_options() {
+        return {
             language: 'en',
             translation: {},
             global: false,
-            model: null
-        };
-        this.options = Object.assign(default_options, options);
-
-        if (this.options.global === true) {
-            global.localyze = this.localyze;
-            global.localyze = global.localyze.bind(this);
+            model: null,
+            check_model: true
         }
+    }
 
-        if (this.options.model && typeof this.options.model === 'string') {
-            this._getTranslation(this.options, 'model');
+    checkFetch() {
+        if (!window && global && require) {
+            try {
+                this.fetch = require('node-fetch');
+            } catch (err) { }
         }
-
-        this.request = require('request');
-
-        this.checkTranslations();
+        else {
+            if (window.fetch) {
+                this.fetch = window.fetch;
+                this.fetch = this.fetch.bind(window);
+            }
+        }
     }
 
     checkTranslations() {
         for (let t in this.options.translation) {
-            let translation = typeof this.options.translation[t];
-            if (translation === 'string') {
+            let translation = this.options.translation[t];
+            if (typeof translation === 'string') {
                 this._getTranslation(this.options.translation, t);
             }
             else {
-                console.log(`[l10n] ${t} file loaded`);
-                if (this.options.model) {
-                    this.checkInconsistencies(this.options.translation, t);
+                if (!translation.length) {
+                    console.log(`[l10n] ${t} file loaded`);
+                    if (this.options.model && this.options.check_model) {
+                        this.checkInconsistencies(this.options.translation, t);
+                    }
                 }
+                else {
+                    this.getGroupedTranslation(translation, t);
+                }
+            }
+        }
+    }
+
+    getGroupedTranslation(group, key) {
+        if (!this.options.translation[key]) this.options.translation[key] = {};
+        let count = 0;
+
+        for (let g = 0; g < group.length; g++) {
+            if (!this.loaded[g]) {
+                if (typeof group[g] === 'string') {
+                    this._get(group[g], (res, err) => {
+                        if (res) {
+                            this.options.translation[key] = Object.assign(this.options.translation[key], res);
+                            this.loaded[g] = true;
+                            count++;
+                            if (count === group.length) {
+                                if (this.options.model && key !== 'model') {
+                                    this.checkInconsistencies(this.options.translation, key);
+                                }
+                                this.checkIfReady(this.options.translation);
+                            }
+                        }
+                    })
+                }
+                else {
+                    this.options.translation[key] = Object.assign(this.options.translation[key], group[g]);
+                    count++;
+                    if (count === group.length) {
+                        if (this.options.model && key !== 'model') {
+                            this.checkInconsistencies(this.options.translation, key);
+                        }
+                        this.checkIfReady(this.options.translation);
+                    }
+                }
+            }
+        }
+    }
+
+    addTranslationFile(key, data, cb) {
+        if (typeof data === 'string') {
+            if (!this.loaded[data]) {
+                this._get(data, (res, err) => {
+                    if (res) {
+                        this.options.translation[key] = Object.assign(this.options.translation[key], res);
+                        this.loaded[data] = true;
+                        if (this.options.model && key !== 'model') {
+                            this.checkInconsistencies(this.options.translation, key);
+                        }
+
+                        if (cb) {
+                            try { cb(true) }
+                            catch (err) {
+                                console.warn(err);
+                                if (cb) cb(false, err);
+                            }
+                        }
+                    }
+                })
+            }
+        }
+        else {
+            try {
+                this.options.translation[key] = Object.assign(this.options.translation[key], data);
+                if (cb) cb(true);
+            } catch (err) {
+                console.warn(err);
+                if (cb) cb(false, err);
             }
         }
     }
 
     _getTranslation(obj, key) {
-        this._get(obj[key], (res) => {
-            try {
-                res = JSON.parse(res);
+        this._get(obj[key], (res, err) => {
+            if (res) {
                 obj[key] = res;
                 console.log(`[l10n] ${key} file loaded`);
-                if (this.options.model) {
+                if (this.options.model && key !== 'model') {
                     this.checkInconsistencies(obj, key);
                 }
-            } catch (err) { console.warn(err); }
-        })
+                this.checkIfReady(obj);
+            }
+            else {
+                console.log(`[l10n] Error loading ${key}`, err);
+            }
+        });
+    }
+
+    checkIfReady(translations) {
+        for (let t in translations) {
+            if (!translations[t] || typeof translations[t] === 'string') return false;
+        }
+
+        this.callReady();
+    }
+
+    callReady() {
+        if (this.options.ready) {
+            try {
+                this.options.ready(this);
+            } catch (err) { }
+        }
     }
 
     checkInconsistencies(obj, key) {
@@ -55,25 +159,34 @@ class Localyze {
         for (let m in this.options.model) {
             let found = false;
             for (let o in obj[key]) {
-                if (m === o) {
+                if (m == o) {
                     found = true;
                 }
             }
 
             if (!found) {
                 nfound.push(m);
-                console.warn(`[${key.toUpperCase()}] Key "${m}" not found`)
             }
         }
+
+        if (nfound.length) console.warn(`[MODEL-CHECK] Key(s) "${nfound.join('", "')}" missing in ${key.toUpperCase()}`)
     }
 
-    localyze(str) {
+    localyze(str, transform) {
         try {
-            let local_str = ('' + str).split('.');
             let actual = this.options.translation[this.options.language];
+            let local_str = Array.isArray(str) ? str : [('' + str)];
+            let translation = [];
             for (let t = 0; t < local_str.length; t++) {
-                actual = actual[local_str[t]]
+                let word = local_str[t].split('.');
+                let translated = actual;
+                for (let i = 0; i < word.length; i++) {
+                    translated = translated[word[i]];
+                }
+                translation.push(translated);
             }
+            actual = translation.join(' ');
+            if (transform) return this._checkTransform(actual, transform);
             return actual;
         }
         catch (err) {
@@ -81,16 +194,32 @@ class Localyze {
         }
     }
 
-    getAvailableLanguages() {
-        let langs = [];
-        for (let l in this.options.translation) {
-            langs.push(l);
-        }
-        return langs;
+    _checkTransform(str, t) {
+        if (t === 'lower') return str.toLowerCase();
+        if (t === 'upper') return str.toUpperCase();
+        if (t === 'capitalize') return this._capitalizeFirstLetter(str);
+        if (t === 'title') return this._capitalizeAllLetters(str);
     }
 
-    getLanguage() {
+    _capitalizeFirstLetter(str) {
+        str = str.toLowerCase();
+        return str.replace(/(^|\s)\S/, v => v.toUpperCase());
+    }
+
+    _capitalizeAllLetters(str) {
+        return str.replace(/(^|\s)\S/g, v => v.toUpperCase());
+    }
+
+    get availableLanguages() {
+        return Object.keys(this.options.translation);
+    }
+
+    get language() {
         return this.options.language;
+    }
+
+    set language(lang) {
+        this.options.language = lang;
     }
 
     setLanguage(lang) {
@@ -109,10 +238,13 @@ class Localyze {
     }
 
     _get(url, cb) {
-        this.request(url, (err, res, body) => {
-            cb(body);
-        })
+        let error = (err) => { cb(null, err); };
+        this.fetch(url).then((data) => {
+            data.json().then((data) => {
+                cb(data);
+            }).catch(error);
+        }).catch(error);
     }
 }
 
-module.exports = Localyze;
+export default Localyze;
