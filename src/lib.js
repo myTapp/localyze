@@ -199,7 +199,7 @@ class Localyze {
         if (t === 'lower') return str.toLowerCase();
         if (t === 'upper') return str.toUpperCase();
         if (t === 'capitalize') return this._capitalizeFirstLetter(str);
-        if (t === 'capitalize-all') return this._capitalizeAllLetters(str);
+        if (t === 'title') return this._capitalizeAllLetters(str);
     }
 
     _capitalizeFirstLetter(str) {
