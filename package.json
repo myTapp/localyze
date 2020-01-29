@@ -3,7 +3,8 @@
   "lib_name": "localyze",
   "version": "0.3.0",
   "description": "",
-  "main": "src/lib.js",
+  "main": "src/lib-node.js",
+  "browser": "./src/lib.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "webpack --watch",
@@ -21,6 +22,7 @@
   },
   "homepage": "https://github.com/myTapp/localyze#readme",
   "dependencies": {
+    "node-fetch": "^2.6.0",
     "request": "^2.88.0"
   },
   "devDependencies": {

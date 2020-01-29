@@ -1,12 +1,12 @@
 class Localyze {
     constructor(options) {
+        this.checkFetch();
         this.options = Object.assign(this.default_options, options);
-        this.loaded = {};
-
-        this.options.global === true && this.bindGlobals();
         this.options.model && typeof this.options.model === 'string' && this._getTranslation(this.options, 'model');
         this.localyze = this.localyze.bind(this);
+        this.loaded = {};
         this.checkTranslations();
+
         return this;
     }
 
@@ -20,17 +20,18 @@ class Localyze {
         }
     }
 
-    bindGlobals() {
-        try {
-            if (window) {
-                window.localyze = this.localyze;
-                window.localyze = window.localyze.bind(this);
+    checkFetch() {
+        if (!window && global && require) {
+            try {
+                this.fetch = require('node-fetch');
+            } catch (err) { }
+        }
+        else {
+            if (window.fetch) {
+                this.fetch = window.fetch;
+                this.fetch = this.fetch.bind(window);
             }
-            if (global) {
-                global.localyze = this.localyze;
-                global.localyze = global.localyze.bind(this);
-            }
-        } catch (err) { }
+        }
     }
 
     checkTranslations() {
@@ -57,21 +58,33 @@ class Localyze {
         if (!this.options.translation[key]) this.options.translation[key] = {};
         let count = 0;
 
-        for (let g of group) {
+        for (let g = 0; g < group.length; g++) {
             if (!this.loaded[g]) {
-                this._getFile(g, (res, err) => {
-                    if (res) {
-                        this.options.translation[key] = Object.assign(this.options.translation[key], res);
-                        this.loaded[g] = true;
-                        count++;
-                        if (count === group.length) {
-                            if (this.options.model && key !== 'model') {
-                                this.checkInconsistencies(this.options.translation, key);
+                if (typeof group[g] === 'string') {
+                    this._get(group[g], (res, err) => {
+                        if (res) {
+                            this.options.translation[key] = Object.assign(this.options.translation[key], res);
+                            this.loaded[g] = true;
+                            count++;
+                            if (count === group.length) {
+                                if (this.options.model && key !== 'model') {
+                                    this.checkInconsistencies(this.options.translation, key);
+                                }
+                                this.checkIfReady(this.options.translation);
                             }
-                            this.checkIfReady(this.options.translation);
                         }
+                    })
+                }
+                else {
+                    this.options.translation[key] = Object.assign(this.options.translation[key], group[g]);
+                    count++;
+                    if (count === group.length) {
+                        if (this.options.model && key !== 'model') {
+                            this.checkInconsistencies(this.options.translation, key);
+                        }
+                        this.checkIfReady(this.options.translation);
                     }
-                })
+                }
             }
         }
     }
@@ -79,7 +92,7 @@ class Localyze {
     addTranslationFile(key, data, cb) {
         if (typeof data === 'string') {
             if (!this.loaded[data]) {
-                this._getFile(data, (res, err) => {
+                this._get(data, (res, err) => {
                     if (res) {
                         this.options.translation[key] = Object.assign(this.options.translation[key], res);
                         this.loaded[data] = true;
@@ -110,7 +123,7 @@ class Localyze {
     }
 
     _getTranslation(obj, key) {
-        this._getFile(obj[key], (res, err) => {
+        this._get(obj[key], (res, err) => {
             if (res) {
                 obj[key] = res;
                 console.log(`[l10n] ${key} file loaded`);
@@ -120,23 +133,9 @@ class Localyze {
                 this.checkIfReady(obj);
             }
             else {
-                console.log(`[l10n] Error loading ${key}`);
+                console.log(`[l10n] Error loading ${key}`, err);
             }
         });
-    }
-
-    _getFile(path, cb) {
-        this._get(path, (res) => {
-            try {
-                res = JSON.parse(res);
-                cb(res, null);
-            } catch (err) {
-                console.warn(err, path, res);
-                try {
-                    cb(null, err);
-                } catch (err) { }
-            }
-        })
     }
 
     checkIfReady(translations) {
@@ -239,12 +238,12 @@ class Localyze {
     }
 
     _get(url, cb) {
-        var newXHR = new XMLHttpRequest();
-        newXHR.addEventListener('load', function () {
-            cb(this.response);
-        });
-        newXHR.open('GET', url);
-        newXHR.send();
+        let error = (err) => { cb(null, err); };
+        this.fetch(url).then((data) => {
+            data.json().then((data) => {
+                cb(data);
+            }).catch(error);
+        }).catch(error);
     }
 }
 
