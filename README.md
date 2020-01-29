@@ -1,23 +1,15 @@
 # localyze
-minimalist localization tool for both node.js and browser
 
-supports multifile translation and model diff
+minimalist localization tool for both node.js and browser. Supports multi-file translation and model diff.
+
+## Installation
 
 ```sh
-npm i localyze
+npm i --save localyze
 ```
 
-- browser 
-```javascript
-import Localyze from 'localyze';
-```
+## Usage
 
-- node
-```javascript
-const Localyze = require('localyze');
-```
-
-- quick-start
 ```javascript
 new Localyze({
     language: 'pt-br',
@@ -25,11 +17,23 @@ new Localyze({
         'pt-br': 'pt-br/pt-br.json'
     },
     ready: ({ localyze }) => {
-        console.log(localyze`input.invalid`);
+        console.log(localyze`admin.reboot`);
     }
 });
 ```
-- multifile example
+
+`pt-br/pt-br.json ⇣`
+
+```json
+{
+    "admin": {
+        "reboot": "Reiniciar"
+    }
+}
+```
+
+#### Multi-file example
+
 ```javascript
 new Localyze({
     language: 'pt-br',
@@ -39,22 +43,30 @@ new Localyze({
         'es-esp': ['es-esp/login.json', 'es-esp/home.json']
     },
     ready: ({ localyze }) => {
-        console.log(localyze`input.invalid`);
+        console.log(localyze`admin.reboot`);
     }
 });
 ```
 
-- add new file to translation: 
+#### Model diff
+
+TODO
+
+#### Add new file to translation
+
 ```javascript
 localyze.addTranslationFile('pt-br', 'pt-br/dashboard.json', (success) => {
     console.log(success);
 });
 ```
 
-- transform output
+#### Transform output
 ```javascript
 localyze('input.valid', 'lower') // toLowerCase
 localyze('input.warning', 'upper') // toUpperCase
 localyze('input.error', 'capitalize') // Capitalize
 localyze('input.error', 'title') // Capitalize Every Word
 ```
+
+## License
+[ISC](LICENSE.md) © myTapp software
